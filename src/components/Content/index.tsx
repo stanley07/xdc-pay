@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import styles from "./styles.module.scss";
+import { Web3ModalContext } from "../../context/Web3ModalContext";
 
 const Content: React.FC = () => {
-  const [inputData, setInputData] = useState("");
+
+  const { account, chainId, web3 } = React.useContext(Web3ModalContext);
+
+  const [CurrentChainId, setCurrentChainId] = useState("");
   const [walletStatus, setWalletStatus] = useState(false);
+  const [myBalance, setMyBalance] = useState("");
 
   function ellipseAddress(
     address: string = "",
@@ -11,6 +16,41 @@ const Content: React.FC = () => {
   ): string {
     return `${address.slice(0, width + 2)}...${address.slice(-width)}`;
   }
+
+  const getBalance = async () => {
+    if (web3 && account){
+      const balance = await web3?.eth.getBalance(account);
+      // balance => 18 decimal
+      setMyBalance(web3?.utils.fromWei(balance, "ether"));
+    } else {
+      setMyBalance("");
+    }
+  }
+
+
+
+  const getChainId = () => {
+    if(chainId) { 
+      setCurrentChainId(String(chainId));
+    } else {
+      setCurrentChainId("");
+    }
+  }
+
+  const getWalletStatus = () => {
+    if(account && chainId){
+      setWalletStatus(true);
+    }  else {
+      setWalletStatus(false);
+    }
+  }
+
+  React.useEffect(() => {
+    getChainId();
+    getWalletStatus();
+    getBalance();
+  }, [account, chainId, web3]);
+
 
   return (
     <section className={styles.content}>
@@ -24,7 +64,7 @@ const Content: React.FC = () => {
                   </div>
                   <input
                     type="text"
-                    value={inputData}
+                    value={account ? (account) : ("")}
                   />
                 </div>
 
@@ -34,7 +74,7 @@ const Content: React.FC = () => {
                   </div>
                   <input
                     type="text"
-                    value={inputData}
+                    value={CurrentChainId}
                   />
                 </div>
 
@@ -44,7 +84,7 @@ const Content: React.FC = () => {
                   </div>
                   <input
                     type="text"
-                    value={inputData}
+                    value={myBalance}
                   />
                 </div>
 
